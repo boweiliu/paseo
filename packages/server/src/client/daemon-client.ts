@@ -5,7 +5,9 @@ import {
   AgentCreatedStatusPayloadSchema,
   AgentRefreshedStatusPayloadSchema,
   AgentResumedStatusPayloadSchema,
+  CheckoutRenameBranchResponseSchema,
   parseServerInfoStatusPayload,
+  RenameTerminalResponseSchema,
   RestartRequestedStatusPayloadSchema,
   ShutdownRequestedStatusPayloadSchema,
   SessionInboundMessageSchema,
@@ -266,6 +268,7 @@ type CheckoutPrCreatePayload = CheckoutPrCreateResponse["payload"];
 type CheckoutPrStatusPayload = CheckoutPrStatusResponse["payload"];
 type PullRequestTimelinePayload = PullRequestTimelineResponse["payload"];
 type CheckoutSwitchBranchPayload = CheckoutSwitchBranchResponse["payload"];
+export type RenameBranchResult = z.infer<typeof CheckoutRenameBranchResponseSchema>["payload"];
 type StashSavePayload = StashSaveResponse["payload"];
 type StashPopPayload = StashPopResponse["payload"];
 type StashListPayload = StashListResponse["payload"];
@@ -332,6 +335,7 @@ type DictationFinishAcceptedPayload = Extract<
 type AgentPermissionResolvedPayload = AgentPermissionResolvedMessage["payload"];
 type ListTerminalsPayload = ListTerminalsResponse["payload"];
 type CreateTerminalPayload = CreateTerminalResponse["payload"];
+export type RenameTerminalResult = z.infer<typeof RenameTerminalResponseSchema>["payload"];
 type SubscribeTerminalPayload = SubscribeTerminalResponse["payload"];
 type CloseItemsPayload = CloseItemsResponse["payload"];
 type KillTerminalPayload = KillTerminalResponse["payload"];
@@ -578,6 +582,16 @@ export interface UpdateScheduleOptions {
   newAgentConfig?: UpdateScheduleNewAgentConfig;
   maxRuns?: number | null;
   expiresAt?: string | null;
+  requestId?: string;
+}
+export interface RenameBranchInput {
+  cwd: string;
+  branch: string;
+  requestId?: string;
+}
+export interface RenameTerminalInput {
+  terminalId: string;
+  title: string;
   requestId?: string;
 }
 type ListAvailableEditorsPayload = ListAvailableEditorsResponseMessage["payload"];
@@ -2791,6 +2805,19 @@ export class DaemonClient {
     });
   }
 
+  async renameBranch(input: RenameBranchInput): Promise<RenameBranchResult> {
+    return this.sendCorrelatedSessionRequest({
+      requestId: input.requestId,
+      message: {
+        type: "checkout_rename_branch_request",
+        cwd: input.cwd,
+        branch: input.branch,
+      },
+      responseType: "checkout_rename_branch_response",
+      timeout: 30000,
+    });
+  }
+
   async stashSave(
     cwd: string,
     options?: { branch?: string },
@@ -3491,6 +3518,19 @@ export class DaemonClient {
       responseType: "create_terminal_response",
       timeout: 10000,
       options: { skipQueue: true },
+    });
+  }
+
+  async renameTerminal(input: RenameTerminalInput): Promise<RenameTerminalResult> {
+    return this.sendCorrelatedSessionRequest({
+      requestId: input.requestId,
+      message: {
+        type: "rename_terminal_request",
+        terminalId: input.terminalId,
+        title: input.title,
+      },
+      responseType: "rename_terminal_response",
+      timeout: 10000,
     });
   }
 
