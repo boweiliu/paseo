@@ -26,7 +26,7 @@ interface SessionInternals {
     lastEmittedByWorkspaceId: Map<string, unknown>;
   };
   buildWorkspaceDescriptorMap: () => Promise<Map<string, unknown>>;
-  syncWorkspaceGitObserver(cwd: string, details: { isGit: boolean }): void;
+  syncWorkspaceGitObserver(cwd: string, details: { isGit: boolean }): Promise<void>;
   listAgentPayloads: () => Promise<unknown[]>;
 }
 
@@ -316,7 +316,7 @@ describe("workspace git watch targets", () => {
 
     sessionAny.buildWorkspaceDescriptorMap = async () => new Map([[descriptor.id, descriptor]]);
 
-    sessionAny.syncWorkspaceGitObserver("/tmp/repo", { isGit: true });
+    await sessionAny.syncWorkspaceGitObserver("/tmp/repo", { isGit: true });
 
     expect(workspaceGitService.registerWorkspace).toHaveBeenCalledWith(
       { cwd: "/tmp/repo" },
@@ -375,7 +375,7 @@ describe("workspace git watch targets", () => {
       lastEmittedByWorkspaceId: new Map(),
     };
 
-    sessionAny.syncWorkspaceGitObserver("/tmp/repo", { isGit: true });
+    await sessionAny.syncWorkspaceGitObserver("/tmp/repo", { isGit: true });
     emitted.length = 0;
 
     subscriptions[0]?.listener(
@@ -458,7 +458,7 @@ describe("workspace git watch targets", () => {
       name: "old-branch",
     });
 
-    await sessionAny.syncWorkspaceGitWatchTarget("/tmp/repo", { isGit: true });
+    await sessionAny.syncWorkspaceGitObserver("/tmp/repo", { isGit: true });
 
     subscriptions[0]?.listener(
       createWorkspaceRuntimeSnapshot("/tmp/repo", {
@@ -506,7 +506,7 @@ describe("workspace git watch targets", () => {
       lastEmittedByWorkspaceId: new Map(),
     };
 
-    sessionAny.syncWorkspaceGitObserver("/tmp/repo", { isGit: true });
+    await sessionAny.syncWorkspaceGitObserver("/tmp/repo", { isGit: true });
     emitted.length = 0;
 
     subscriptions[0]?.listener(
