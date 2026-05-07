@@ -913,7 +913,6 @@ function createTerminalManagerStub(options?: { setTerminalTitle?: ReturnType<typ
   };
 }
 
-
 afterEach(() => {
   vi.clearAllMocks();
 });
